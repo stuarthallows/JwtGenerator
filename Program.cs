@@ -13,25 +13,30 @@ var config = new ConfigurationBuilder()
 
 var services = new ServiceCollection();
 
-services.AddSingleton<JwtSecurityService>()
+services.AddSingleton<JwtSecurityTokenService>()
         .AddLogging(builder => builder.AddConsole())
         .Configure<GreenTinOptions>(config.GetSection(nameof(GreenTinOptions)));
 
 var provider = services.BuildServiceProvider();
 
-var jwtSecurity = provider.GetRequiredService<JwtSecurityService>();
+var jwtSecurity = provider.GetRequiredService<JwtSecurityTokenService>();
 var logger = provider.GetRequiredService<ILogger<Program>>();
 
 try
 {
     var token = jwtSecurity.CreateToken("john.doe@larch.com");
     logger.LogInformation("{Token}", token);
-
-    var claims = jwtSecurity.ValidateToken(token);
-    foreach (var claim in claims.Claims)
-    {
-        logger.LogInformation("{Type}: {Value}", claim.Type, claim.Value);
-    }
+    
+    var principal = jwtSecurity.ValidateToken(token);
+    logger.LogInformation("Validated {Uid}:", principal.FindFirst(c => c.Type == "uid"));
+}
+catch (NotSupportedException e)
+{
+    logger.LogError(e, "Not supported to process token");
+}
+catch (ArgumentException e)
+{
+    logger.LogError(e, "Failed to process token");
 }
 catch (SecurityTokenSignatureKeyNotFoundException e)
 {
