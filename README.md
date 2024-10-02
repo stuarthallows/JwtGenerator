@@ -4,7 +4,7 @@ Creates and validates a JWT token.
 
 1. Generate private and public key pair
    1. Optionally use [jwkeygen.io](https://jwkeygen.io/)
-   2. For the key parameters select SIGN / ASYMMETRIC / ECDSA / P-256 / exclude key Id
+   2. For the key parameters select SIGN / ASYMMETRIC / ECDSA / P-256 / include key Id
 2. Add the private key to user secrets
     - `dotnet user-secrets set GreenTinOptions:PrivateKey "<PRIVATE_KEY>"`
 

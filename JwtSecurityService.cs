@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace JwtGenerator;
@@ -33,7 +34,7 @@ public class JwtSecurityService(IOptions<GreenTinOptions> options)
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_greenTinOptions.PrivateKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_greenTinOptions.PublicKey)),
             ValidateIssuer = true,
             ValidIssuer = _greenTinOptions.Issuer,
             ValidateAudience = true,
