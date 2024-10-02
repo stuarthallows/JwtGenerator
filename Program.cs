@@ -18,7 +18,7 @@ var provider = services.BuildServiceProvider();
 
 var jwtSecurity = provider.GetRequiredService<JwtSecurityService>();
 
-var token = jwtSecurity.CreateToken("john.doe@company.com");
+var token = jwtSecurity.CreateToken("john.doe@larch.com");
 Console.WriteLine(token);
 
 var claims = jwtSecurity.ValidateToken(token);
