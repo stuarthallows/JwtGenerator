@@ -25,7 +25,7 @@ var logger = provider.GetRequiredService<ILogger<Program>>();
 try
 {
     var token = jwtSecurity.CreateToken("john.doe@larch.com");
-    logger.LogInformation("Generated token: {Token}", token);
+    logger.LogInformation("{Token}", token);
 
     var claims = jwtSecurity.ValidateToken(token);
     foreach (var claim in claims.Claims)

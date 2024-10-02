@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace JwtGenerator;
@@ -14,6 +13,7 @@ public class JwtSecurityService(IOptions<GreenTinOptions> options)
 
     public string CreateToken(string userId)
     {
+        // TODO use ECDsa?
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_greenTinOptions.PrivateKey));
         
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -31,10 +31,15 @@ public class JwtSecurityService(IOptions<GreenTinOptions> options)
     
     public ClaimsPrincipal ValidateToken(string token)
     {
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_greenTinOptions.PublicKey))
+        {
+            KeyId = _greenTinOptions.KeyId
+        };
+        
         var validationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_greenTinOptions.PublicKey)),
+            ValidateIssuerSigningKey = false,
+            IssuerSigningKey = signingKey,
             ValidateIssuer = true,
             ValidIssuer = _greenTinOptions.Issuer,
             ValidateAudience = true,
@@ -43,6 +48,6 @@ public class JwtSecurityService(IOptions<GreenTinOptions> options)
             ClockSkew = TimeSpan.Zero
         };
 
-        return _tokenHandler.ValidateToken(token, validationParameters, out _);
+        return _tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
     }
 }
