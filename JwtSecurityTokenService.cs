@@ -1,42 +1,40 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace JwtGenerator;
 
-public class JwtSecurityTokenService(IOptions<GreenTinOptions> options)
+public class JwtSecurityTokenService
 {
-    private readonly GreenTinOptions _options = options.Value;
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
 
-    public string CreateToken(string userId)
+    public string CreateToken(string userId, string audience, string issuer, string privateKey, int expiryInMinutes)
     {
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([new Claim("uid", userId)]),
-            Expires = DateTime.UtcNow.AddMinutes(_options.ExpiryInMinutes),
-            Audience = _options.Audience,
-            Issuer = _options.Issuer,
-            SigningCredentials = new SigningCredentials(new JsonWebKey(_options.PrivateKey), SecurityAlgorithms.EcdsaSha256)
+            Expires = DateTime.UtcNow.AddMinutes(expiryInMinutes),
+            Audience = audience,
+            Issuer = issuer,
+            SigningCredentials = new SigningCredentials(new JsonWebKey(privateKey), SecurityAlgorithms.EcdsaSha256)
         };
 
         var token = _tokenHandler.CreateToken(tokenDescriptor);
         return _tokenHandler.WriteToken(token);
     }
     
-    public ClaimsPrincipal ValidateToken(string token)
+    public ClaimsPrincipal ValidateToken(string token, string audience, string issuer, string publicKey)
     {
         var validationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new JsonWebKey(_options.PublicKey),
+            ClockSkew = TimeSpan.Zero,
             ValidateIssuer = true,
-            ValidIssuer = _options.Issuer,
+            ValidIssuer = issuer,
             ValidateAudience = true,
-            ValidAudience = _options.Audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ValidAudience = audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new JsonWebKey(publicKey),
+            ValidateLifetime = true
         };
 
         return _tokenHandler.ValidateToken(token, validationParameters, out _);

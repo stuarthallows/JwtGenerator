@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 using JwtGenerator;
+using JwtGenerator.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var config = new ConfigurationBuilder()
@@ -24,10 +26,11 @@ var logger = provider.GetRequiredService<ILogger<Program>>();
 
 try
 {
-    var token = jwtSecurity.CreateToken("john.doe@larch.com");
+    var options = provider.GetRequiredService<IOptions<GreenTinOptions>>().Value.Jwt;
+    var token = jwtSecurity.CreateToken("john.doe@larch.com", options.Audience, options.Issuer, options.PrivateKey, options.ExpiryInMinutes);
     logger.LogInformation("{Token}", token);
     
-    var principal = jwtSecurity.ValidateToken(token);
+    var principal = jwtSecurity.ValidateToken(token, options.Audience, options.Issuer, options.PublicKey);
     logger.LogInformation("Validated {Uid}:", principal.FindFirst(c => c.Type == "uid"));
 }
 catch (NotSupportedException e)
