@@ -7,7 +7,7 @@ namespace JwtGenerator;
 
 public class JwtSecurityTokenService(IOptions<GreenTinOptions> options)
 {
-    private readonly GreenTinOptions _greenTinOptions = options.Value;
+    private readonly GreenTinOptions _options = options.Value;
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
 
     public string CreateToken(string userId)
@@ -15,10 +15,10 @@ public class JwtSecurityTokenService(IOptions<GreenTinOptions> options)
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([new Claim("uid", userId)]),
-            Expires = DateTime.UtcNow.AddMinutes(_greenTinOptions.ExpiryInMinutes),
-            Audience = _greenTinOptions.Audience,
-            Issuer = _greenTinOptions.Issuer,
-            SigningCredentials = new SigningCredentials(new JsonWebKey(_greenTinOptions.PrivateKey), SecurityAlgorithms.EcdsaSha256)
+            Expires = DateTime.UtcNow.AddMinutes(_options.ExpiryInMinutes),
+            Audience = _options.Audience,
+            Issuer = _options.Issuer,
+            SigningCredentials = new SigningCredentials(new JsonWebKey(_options.PrivateKey), SecurityAlgorithms.EcdsaSha256)
         };
 
         var token = _tokenHandler.CreateToken(tokenDescriptor);
@@ -30,11 +30,11 @@ public class JwtSecurityTokenService(IOptions<GreenTinOptions> options)
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new JsonWebKey(_greenTinOptions.PublicKey),
+            IssuerSigningKey = new JsonWebKey(_options.PublicKey),
             ValidateIssuer = true,
-            ValidIssuer = _greenTinOptions.Issuer,
+            ValidIssuer = _options.Issuer,
             ValidateAudience = true,
-            ValidAudience = _greenTinOptions.Audience,
+            ValidAudience = _options.Audience,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
