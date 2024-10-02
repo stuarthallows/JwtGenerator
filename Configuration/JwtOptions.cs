@@ -1,6 +1,6 @@
-namespace JwtGenerator;
+﻿namespace JwtGenerator.Configuration;
 
-public class GreenTinOptions
+public class JwtOptions
 {
     public string Audience { get; init; } = string.Empty;
     public string Issuer { get; init; } = string.Empty;

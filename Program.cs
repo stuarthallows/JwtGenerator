@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
 
 using JwtGenerator;
+using JwtGenerator.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var config = new ConfigurationBuilder()
@@ -24,10 +27,17 @@ var logger = provider.GetRequiredService<ILogger<Program>>();
 
 try
 {
-    var token = jwtSecurity.CreateToken("john.doe@larch.com");
+    var options = provider.GetRequiredService<IOptions<GreenTinOptions>>().Value.Jwt;
+    var emailClaim = new Claim("email", "john.doe@larch.com");    
+    var token = jwtSecurity.CreateToken(
+        options.Audience, 
+        options.Issuer, 
+        options.PrivateKey, 
+        options.ExpiryInMinutes, 
+        emailClaim);
     logger.LogInformation("{Token}", token);
     
-    var principal = jwtSecurity.ValidateToken(token);
+    var principal = jwtSecurity.ValidateToken(token, options.Audience, options.Issuer, options.PublicKey);
     logger.LogInformation("Validated {Uid}:", principal.FindFirst(c => c.Type == "uid"));
 }
 catch (NotSupportedException e)
@@ -41,6 +51,10 @@ catch (ArgumentException e)
 catch (SecurityTokenSignatureKeyNotFoundException e)
 {
     logger.LogError(e, "Failed to process token");
+}
+catch (SecurityTokenExpiredException e)
+{
+    logger.LogError(e, "Failed to process expired token");
 }
 
 // ReSharper disable once ClassNeverInstantiated.Global
